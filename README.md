@@ -4,8 +4,9 @@
 ## ✨Summary
 This repository provides the implementation of **Flow Latent-based Preference Learning (FLPL)**.
 
-
-
+<p align="center">
+  <img src="./fig/flpl.png" alt="Overview of FLPL" width="500"/>
+</p>
 
 ## ✨Environment Setting
 Clone this repository and run:
@@ -38,7 +39,7 @@ Our model FLPL can be evaluated on genarated datasets, along with all baseline m
 
 For example:
 
-- **run_pets.sh** runs FLPL on the Pets dataset with Llama-3.2-8B.
+- **run_pets.sh** runs FLPL on the Pets dataset with Llama-3.1-8B.
 
 - **run_p4.sh** runs FLPL on the UF-P-4 dataset with Llama-3.2-3B.
 ```bash

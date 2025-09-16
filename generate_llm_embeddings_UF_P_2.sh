@@ -1,5 +1,5 @@
-
-model_type=$1
+model_type="llama-3.1-3B-instruct"
+#model_type="llama-3.1-8B-instruct"
 other_subsets="84"
 
 # Generate LLM embeddings for UltraFeedback dataset
