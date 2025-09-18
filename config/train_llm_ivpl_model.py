@@ -134,7 +134,7 @@ class ScriptArguments:
     )
     max_length: int = field(default=1024)
     eval_first_step: bool = field(
-        default=False,
+        default=True,
         metadata={"help": "Whether to run eval after the first step"},
     )
     log_dir: str = field(default="data/reward_models/hh_rlhf")

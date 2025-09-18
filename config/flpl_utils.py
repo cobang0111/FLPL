@@ -496,12 +496,12 @@ class FLPLTrainer(Trainer):
             
         reconstruction_loss = self.loss(rewards_chosen, rewards_rejected)
         if self.kl_loss_weight == 0:
-            loss = reproduction_loss
+            loss = reconstruction_loss
             accuracy = torch.mean((rewards_chosen > rewards_rejected).float())
             if not return_outputs:
                 self.log(
                     {
-                        "train_recon_loss": reproduction_loss.mean().item(),
+                        "train_recon_loss":reconstruction_loss.mean().item(),
                         "train_accuracy": accuracy.mean().item(),
                         "rewards_chosen": rewards_chosen.mean().item(),
                         "rewards_rejected": rewards_rejected.mean().item(),
