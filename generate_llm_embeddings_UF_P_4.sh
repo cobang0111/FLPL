@@ -19,11 +19,11 @@ survey_size=16
 
 for subset in ${subsets}
 do
-    python -m hidden_context.data_utils.add_survey_contexts --output_dir "data/P_4_survey_${survey_size}/" \
+    python -m config.data_utils.add_survey_contexts --output_dir "data/P_4_survey_${survey_size}/" \
     --data_path "data/UltraFeedback_${other_subsets}_P_4" --data_subset ${subset} --data_split train --model_type ${model_type} \
     --other_subsets ${other_subsets} --with_embeddings True --survey_size $survey_size --num_duplicates 1
 
-    python -m hidden_context.data_utils.add_survey_contexts --output_dir "data/P_4_survey_${survey_size}/" \
+    python -m config.data_utils.add_survey_contexts --output_dir "data/P_4_survey_${survey_size}/" \
     --data_path "data/UltraFeedback_${other_subsets}_P_4" --data_subset ${subset} --data_split test --model_type ${model_type} \
     --other_subsets ${other_subsets} --with_embeddings True --survey_size $survey_size --num_duplicates 1
 done

@@ -1,25 +1,31 @@
-<h1 align="center">Pairwise-Guided Preference Encoding for Personalized RLHF: Stop the Collapse</h1>
-<h2 align="center">Flow Latent based Preference Learning (FLPL)</h2>
+<h1 align="center">Swap-guided Preference Learning for Personalized RLHF</h1>
+<h2 align="center"></h2>
 
 ## ✨Summary
-This repository provides the implementation of **Flow Latent-based Preference Learning (FLPL)**.
+This repository provides the implementation of **Swap-guided Preference Learning (SPL)**.
 
 <p align="center">
-  <img src="fig/flpl.png" alt="Overview of FLPL" width="1000"/>
+  <img src="fig/spl.png" alt="Overview of SPL" width="1000"/>
 </p>
 
 ## ✨Environment Setting
 Clone this repository and run:
 
 ```bash
-conda create -n flpl python=3.10
-conda activate flpl
+conda create -n spl python=3.10
+conda activate spl
 pip install -r requirements.txt
 ```
 ## ✨Dataset Generation
 Run the following commands with the model of your choice.
 You may change the model identifiers in the script files if needed (default: Llama 3 3B).
 You need an approved Hugging Face access token to download Llama 3 the first time.
+```bash
+# Put your authorized Hugging Face token
+huggingface-cli login
+```
+
+And then, follow below command to generate datasets.
 ```bash
 # For Pets (Dataset size: 3B ≈ 3GB, 8B ≈ 4GB)
 bash generate_llm_embedding_pets.sh
@@ -36,13 +42,13 @@ bash generate_llm_embedding_UF_P_4.sh
 
 ## ✨Experiments
 
-You can evaluate FLPL on the generated datasets, alongside all baseline models included in the paper.
+You can evaluate SPL on the generated datasets, alongside all baseline models included in the paper.
 
 For example:
 
-- **run_pets.sh** runs FLPL on the Pets dataset with Llama-3.1-8B-instruct.
+- **run_pets.sh** runs SPL on the Pets dataset with Llama-3.1-8B-instruct.
 
-- **run_p4.sh** runs FLPL on the UF-P-4 dataset with Llama-3.2-3B-instruct.
+- **run_p4.sh** runs SPL on the UF-P-4 dataset with Llama-3.2-3B-instruct.
 ```bash
 # FLPL in Pets
 bash run_pets.sh

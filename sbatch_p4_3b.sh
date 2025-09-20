@@ -11,7 +11,7 @@ echo "### JOB STARTED: $(date)"
 echo "### NODE: $(hostname)"
 echo "### CUDA_VISIBLE_DEVICES: $CUDA_VISIBLE_DEVICES"
 
-source ~/anaconda3/etc/profile.d/conda.sh && conda activate flpl
+source ~/anaconda3/etc/profile.d/conda.sh && conda activate spl
 
 export HF_HOME=""
 export HF_DATASETS_CACHE="$HF_HOME/datasets"
@@ -19,7 +19,7 @@ export TRANSFORMERS_CACHE="$HF_HOME/transformers"
 echo $HF_HOME
 
 export WANDB_MODE=online
-export WANDB_PROJECT=FLPL_p4
+export WANDB_PROJECT=SPL_p4
 export NCCL_P2P_DISABLE="1"
 export NCCL_IB_DISABLE="1"
 
@@ -94,14 +94,14 @@ python -m config.train_llm_ivpl_model \
         --use_iaf True \
         --num_iaf_flows 2
 
-# Flow Latent Preference Learning (FLPL): flpl
-elif [ ${model_type} == "flpl" ];
+# Swap-guided Preference Learning (SPL): spl
+elif [ ${model_type} == "spl" ];
 then
-python -m config.train_llm_flpl_model \
+python -m config.train_llm_spl_model \
         --model_name=${model_name} \
         --data_path="data/P_4_survey_16/llama-3.2-3B-instruct" \
         --num_train_epochs=2 \
-        --reward_model_type=flpl \
+        --reward_model_type=spl \
         --data_subset=all \
         --log_dir="logs/llama-3.2-3B-instruct_P_4_survey_16" \
         --bf16 True \

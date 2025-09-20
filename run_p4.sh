@@ -1,14 +1,14 @@
 export WANDB_MODE=online
-export WANDB_PROJECT=FLPL_p4
+export WANDB_PROJECT=SPL_p4
 
 # huggingface original name
 model_name='meta-llama/Llama-3.2-3B-Instruct'
 
-python -m config.train_llm_flpl_model \
+python -m config.train_llm_spl_model \
         --model_name=${model_name} \
         --data_path="data/P_4_survey_16/llama-3.2-3B-instruct" \
         --num_train_epochs=2 \
-        --reward_model_type=flpl \
+        --reward_model_type=spl \
         --data_subset=all \
         --log_dir="logs/llama-3.2-3B-instruct_P_4_survey_16" \
         --bf16 True \

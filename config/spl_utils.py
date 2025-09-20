@@ -204,12 +204,12 @@ class Decoder(nn.Module):
 
 
 
-class FLPLModel(nn.Module):
+class SPLModel(nn.Module):
     def __init__(self, encoder_embed_dim, decoder_embed_dim, hidden_dim, latent_dim, llm_encoder, llm_contexts_encoder,
                  use_iaf, num_iaf_flows, guiding = True,
                  fixed_contexts=False, fixed_llm_embeddings=False, use_causal_lm=False, use_attention_layer=False,
                  use_transformer=False, concat_chosen_rejected=False):
-        super(FLPLModel, self).__init__()
+        super(SPLModel, self).__init__()
         self.llm_encoder = llm_encoder
         self.llm_contexts_encoder = llm_contexts_encoder
         self.pair_encoder = PairEncoder(encoder_embed_dim, hidden_dim, latent_dim//2)
@@ -219,7 +219,7 @@ class FLPLModel(nn.Module):
         self.d_dim = latent_dim // 2
         self.s_dim = latent_dim // 2
 
-        # FLPL Flow
+        # SPL Flow
         self.use_iaf = use_iaf
         if self.use_iaf:
              self.iaf_flows = nn.ModuleList()
@@ -345,7 +345,7 @@ class FLPLModel(nn.Module):
         torch.save(self, path)
 
 
-class FLPLTrainer(Trainer):
+class SPLTrainer(Trainer):
     def __init__(
         self, *args, lr_lambda=None, kl_loss_weight=None, guiding_weight=None, use_annealing=False, **kwargs
     ):
@@ -387,7 +387,7 @@ class FLPLTrainer(Trainer):
         return torch.mean(self.per_sample_loss(rewards_chosen, rewards_rejected))
 
     def compute_loss(self, wrapped_model, inputs, return_outputs=False):
-        if isinstance(wrapped_model, FLPLModel):
+        if isinstance(wrapped_model, SPLModel):
             model = wrapped_model  # .module
         else:
             model = wrapped_model.module
@@ -513,7 +513,7 @@ class FLPLTrainer(Trainer):
                 )
         else:
 
-            # FLPL
+            # SPL
             if model.use_iaf:
 
                 log_pz = Normal(0,1).log_prob(z).sum(-1)

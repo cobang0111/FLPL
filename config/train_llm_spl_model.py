@@ -16,8 +16,8 @@ from transformers import (
     TrainerCallback,
 )
 from transformers.utils import PaddingStrategy
-from .flpl_utils import FLPLTrainer, FLPLModel
-#from .flpl_enforce_utils import FLPLTrainer, FLPLModel
+from .slpl_utils import SLPLTrainer, SLPLModel
+#from .slpl_enforce_utils import SLPLTrainer, SLPLModel
 
 from .train_llm_preference_model import (
     get_step_decay_lr_lambda,
@@ -273,8 +273,8 @@ class HHRLHFPreprocessor(object):
         return new_examples
 
 
-trainer_classes: Dict[RewardModelType, Type[FLPLTrainer]] = {
-    "flpl": FLPLTrainer,
+trainer_classes: Dict[RewardModelType, Type[SPLTrainer]] = {
+    "spl": SPLTrainer,
 }
 
 
@@ -681,7 +681,7 @@ if __name__ == "__main__":
     # Train the model.
     latent_dim = script_args.latent_dim
     hidden_dim = script_args.hidden_dim
-    flpl_model = FLPLModel(
+    spl_model = SPLModel(
         encoder_embed_dim, decoder_embed_dim, hidden_dim, latent_dim, 
         model, contexts_model,
         use_iaf=script_args.use_iaf,
@@ -690,13 +690,13 @@ if __name__ == "__main__":
         fixed_contexts=script_args.fixed_contexts,
         fixed_llm_embeddings=script_args.fixed_llm_embeddings,
     )
-    flpl_model.llm_encoder.gradient_checkpointing_enable()
+    spl_model.llm_encoder.gradient_checkpointing_enable()
     
-    for name, param in flpl_model.named_parameters():
+    for name, param in spl_model.named_parameters():
         print(name, param.requires_grad)
 
     trainer = trainer_class(
-        model=flpl_model,
+        model=spl_model,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
@@ -732,8 +732,8 @@ if __name__ == "__main__":
 
     output_name = os.path.join(output_name, "model.pt")
     if script_args.model_name == 'gpt2':
-        flpl_model.save_model(output_name)
+        spl_model.save_model(output_name)
     else:
-        torch.save(flpl_model.state_dict(), output_name)
+        torch.save(spl_model.state_dict(), output_name)
         
 
