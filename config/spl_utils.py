@@ -678,18 +678,18 @@ class SPLTrainer(Trainer):
             plt.close()
             return im    
         
-        im1 = plot_latent_tsne(mean)
+        #im1 = plot_latent_tsne(mean)
         im2 = plot_latent_tsne(z)
-        im3 = plot_latent_umap(mean)
+        #im3 = plot_latent_umap(mean)
         im4 = plot_latent_umap(z)
 
         return {
             "loss": loss.mean().item(),
             "accuracy": accuracy.item(),
             "kld": kld.mean().item(),
-            "mean_embeddings_tsne": im1,
+            #"mean_embeddings_tsne": im1,
             "z_embeddings_tsne": im2,
-            "mean_embeddings_umap": im3,
+            #"mean_embeddings_umap": im3,
             "z_embeddings_umap": im4,
             "active_units": au,
         }

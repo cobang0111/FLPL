@@ -82,7 +82,7 @@ python -m config.train_llm_ivpl_model \
         --use_annealing False \
         --kl_loss_weight 1e-4 \
         --guiding True \
-        --guiding_weight 5e-4 \
+        --guiding_weight 1e-5 \
         --fixed_contexts True \
         --fixed_llm_embeddings False \
         --use_last_token_embedding True \
@@ -115,7 +115,7 @@ python -m config.train_llm_spl_model \
         --use_annealing True \
         --kl_loss_weight 1e-4 \
         --guiding True \
-        --guiding_weight 5e-4 \
+        --guiding_weight 1e-5 \
         --fixed_contexts True \
         --fixed_llm_embeddings False \
         --use_last_token_embedding True \

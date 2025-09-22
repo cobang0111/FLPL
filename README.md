@@ -1,4 +1,4 @@
-<h1 align="center">Swap-guided Preference Learning for Personalized RLHF</h1>
+<h1 align="center">Swap-guided Preference Learning for Personalized Reinforcement Learning from Human Feedback</h1>
 <h2 align="center"></h2>
 
 ## ✨Summary
