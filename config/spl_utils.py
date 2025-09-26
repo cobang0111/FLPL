@@ -194,7 +194,7 @@ class Decoder(nn.Module):
         γ = γ.unsqueeze(1).expand(-1, L, -1)            # [B, L, H]
         β = β.unsqueeze(1).expand(-1, L, -1)            # [B, L, H]
 
-        h = torch.relu(γ * h + β)                       # [B, L, H]
+        h = self.act(γ * h + β)                       # [B, L, H]
         out = self.out(h).squeeze(-1)                   # [B, L]
         return out
 
@@ -248,8 +248,8 @@ class SPLModel(nn.Module):
 
     
     def _summarize_pair_contexts(self, ctx_c, ctx_r, seq_start_end):
-        d_all = ctx_c - ctx_r # [sum C_i, D]
-        s_all = ctx_c * ctx_r # [sum C_i, D]
+        d_all = (ctx_c - ctx_r) * 0.5 # [sum C_i, D]
+        s_all = (ctx_c + ctx_r) * 0.5 # [sum C_i, D]
 
         d_list, s_list = [], []
         for (start, end) in seq_start_end:
@@ -315,8 +315,14 @@ class SPLModel(nn.Module):
         pair_embed = torch.cat([pair_embed_chosen, pair_embed_rejected], dim=1)
         mean, log_var, x = self.encode_sequence(pair_embed, seq_start_end)
         
+        with torch.no_grad():
+            pair_embed_swap = torch.cat([pair_embed_rejected, pair_embed_chosen], dim=1)
+            mean_swap, log_var_swap, x_swap = self.encode_sequence(pair_embed_swap, seq_start_end)
+        
         mean = torch.clamp(mean, -1, 1)
         log_var = torch.clamp(log_var, -1, 1)
+        mean_swap = torch.clamp(mean_swap, -1, 1)
+        log_var_swap = torch.clamp(log_var_swap, -1, 1)
         
         if ground_truth_user_vector:
             z = torch.zeros_like(mean)
@@ -336,10 +342,10 @@ class SPLModel(nn.Module):
             z_noise = torch.randn_like(z)
             rc_noise, rr_noise = self.decode(target_chosen, target_rejected, z_noise)
         if self.use_iaf:
-            return rc, rr, mean, log_var, z, log_qz, last_mu, last_log_s, rc_noise, rr_noise
+            return rc, rr, mean, log_var, z, log_qz, last_mu, last_log_s, rc_noise, rr_noise, mean_swap, log_var_swap
         # not use
         else:
-            return rc, rr, mean, log_var, z, rc_noise, rr_noise
+            return rc, rr, mean, log_var, z, rc_noise, rr_noise, mean_swap, log_var_swap
 
     def save_model(self, path):
         torch.save(self, path)
@@ -473,7 +479,7 @@ class SPLTrainer(Trainer):
         
         
         if model.use_iaf:
-            rewards_chosen, rewards_rejected, mean, log_var, z, log_qz, last_mu, last_log_s, rc_noise, rr_noise = model(
+            rewards_chosen, rewards_rejected, mean, log_var, z, log_qz, last_mu, last_log_s, rc_noise, rr_noise, mean_swap, log_var_swap = model(
                 embeddings_chosen,
                 embeddings_rejected,
                 contexts_embeddings_chosen,
@@ -483,7 +489,7 @@ class SPLTrainer(Trainer):
                 ground_truth_user_vector=False, 
             )
         else:
-            rewards_chosen, rewards_rejected, mean, log_var, z, rc_noise, rr_noise = model(
+            rewards_chosen, rewards_rejected, mean, log_var, z, rc_noise, rr_noise, mean_swap, log_var_swap = model(
                     embeddings_chosen,
                     embeddings_rejected,
                     contexts_embeddings_chosen,
@@ -529,19 +535,9 @@ class SPLTrainer(Trainer):
                     )
 
                 raw_kld = raw_kld_per.mean() 
-                
-                with torch.no_grad():
-                    rc_sw, rr_sw, mean_sw, log_var_sw, z_sw, log_qz_sw, last_mu_sw, last_log_s_sw, rc_noise_sw, rr_noise_sw = model(
-                            embeddings_rejected, 
-                            embeddings_chosen,
-                            contexts_embeddings_rejected, 
-                            contexts_embeddings_chosen,
-                            seq_start_end, user_type, 
-                            ground_truth_user_vector=False
-                    )
 
-                diff_mean = mean - mean_sw
-                diff_log_var = log_var - log_var_sw
+                diff_mean = mean - mean_swap
+                diff_log_var = log_var - log_var_swap
 
                 log_var_rmse = torch.sqrt((diff_log_var ** 2).mean())
                 mean_rmse = torch.sqrt((diff_mean ** 2).mean())
@@ -556,8 +552,8 @@ class SPLTrainer(Trainer):
                         norm_b = b.norm(p=2,dim=-1)
                         return dot / ((norm_a + eps) * (norm_b + eps))
                     
-                    mu_cos = cos_eps(mean, mean_sw.detach())
-                    ell_cos = cos_eps(log_var, log_var_sw.detach())
+                    mu_cos = cos_eps(mean, mean_swap.detach())
+                    ell_cos = cos_eps(log_var, log_var_swap.detach())
                     
                     guide = 0.5 * (1.0+mu_cos) + eta * 0.5 * (1.0 - ell_cos)
                     guide_loss = guide.mean()
@@ -596,8 +592,6 @@ class SPLTrainer(Trainer):
                 if model.guiding:
                     self.log(
                         {
-                            "mu_cos": mu_cos.mean().item(),
-                            "ell_cos": ell_cos.mean().item(),
                             "guide_loss": guide_loss.mean().item(),
                             "guide_ratio": guide_ratio.mean().item(),
                         }
@@ -615,9 +609,9 @@ class SPLTrainer(Trainer):
                         "embeddings_chosen": embeddings_chosen.mean().item(),
                         "embeddings_rejected": embeddings_rejected.mean().item(),
                         "mean": mean.mean().item(),
-                        "mean_swap": mean_sw.mean().item(),
+                        "mean_swap": mean_swap.mean().item(),
                         "log_var": log_var.mean().item(),
-                        "log_var_swap": log_var_sw.mean().item(),
+                        "log_var_swap": log_var_swap.mean().item(),
                         "z_noise_diff": z_noise_diff.mean().item(),
                     }
                 )
@@ -626,6 +620,7 @@ class SPLTrainer(Trainer):
                 "rewards_chosen": rewards_chosen,
                 "rewards_rejected": rewards_rejected,
                 "mean": mean,
+                "last_mean": last_mu,
                 "log_var": log_var,
                 "z": z,
                 "user_type": user_type,
@@ -649,13 +644,14 @@ class SPLTrainer(Trainer):
         rewards_chosen = torch.from_numpy(rewards_chosen)
         rewards_rejected = torch.from_numpy(rewards_rejected)
         mean = torch.from_numpy(mean)
+        last_mean = torch.from_numpy(last_mean)
         log_var = torch.from_numpy(log_var)
         z = torch.from_numpy(z)
         loss = cls.per_sample_loss(rewards_chosen, rewards_rejected)
         
         # MODIFY
-        kld = -torch.sum(1 + log_var - mean.pow(2) - log_var.exp(), dim=-1)
-        au = cls.compute_active_units(mean)
+        #kld = -torch.sum(1 + log_var - mean.pow(2) - log_var.exp(), dim=-1)
+        au = cls.compute_active_units(last_mean)
         accuracy = torch.mean((loss < np.log(2)).float())
 
         def plot_latent_tsne(latent):
@@ -686,7 +682,7 @@ class SPLTrainer(Trainer):
         return {
             "loss": loss.mean().item(),
             "accuracy": accuracy.item(),
-            "kld": kld.mean().item(),
+            #"kld": kld.mean().item(),
             #"mean_embeddings_tsne": im1,
             "z_embeddings_tsne": im2,
             #"mean_embeddings_umap": im3,

@@ -28,15 +28,15 @@ huggingface-cli login
 And then, follow below command to generate datasets.
 ```bash
 # For Pets (Dataset size: 3B ≈ 3GB, 8B ≈ 4GB)
-bash generate_llm_embedding_pets.sh
+bash generate_llm_embeddings_pets.sh
 
 # For UF-P-2 (Dataset size: 3B ≈ 43GB, 8B ≈ 56GB)
 python -m config.data_utils.ultrafeedback_augment -a 84 -n P
-bash generate_llm_embedding_UF_P_2.sh
+bash generate_llm_embeddings_UF_P_2.sh
 
 # For UF-P-4 (Dataset size: 3B ≈ 61GB, 8B ≈ 79GB)
 python -m config.data_utils.ultrafeedback_augment -a single -n P_4 -c
-bash generate_llm_embedding_UF_P_4.sh
+bash generate_llm_embeddings_UF_P_4.sh
 
 ```
 

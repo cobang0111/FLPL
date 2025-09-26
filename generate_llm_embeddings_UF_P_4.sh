@@ -1,4 +1,4 @@
-model_type="llama-3.1-3B-instruct"
+model_type="llama-3.2-3B-instruct"
 #model_type="llama-3.1-8B-instruct"
 other_subsets="single"
 

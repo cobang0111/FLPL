@@ -141,7 +141,7 @@ class Decoder(nn.Module):
         γ = γ.unsqueeze(1).expand(-1, L, -1)            # [B, L, H]
         β = β.unsqueeze(1).expand(-1, L, -1)            # [B, L, H]
 
-        h = torch.relu(γ * h + β)                       # [B, L, H]
+        h = self.act(γ * h + β)                       # [B, L, H]
         out = self.out(h).squeeze(-1)                   # [B, L]
         return out
 
@@ -434,8 +434,8 @@ class VPLTrainer(Trainer):
                 if model.guiding:
                     self.log(
                         {
-                            "mu_cos": mu_cos.mean().item(),
-                            "ell_cos": ell_cos.mean().item(),
+                            #"mu_cos": mu_cos.mean().item(),
+                            #"ell_cos": ell_cos.mean().item(),
                             "guide_loss": guide_loss.mean().item(),
                             "guide_ratio": guide_ratio.mean().item(),
                         }
@@ -490,7 +490,7 @@ class VPLTrainer(Trainer):
         log_var = torch.from_numpy(log_var)
         z = torch.from_numpy(z)
         loss = cls.per_sample_loss(rewards_chosen, rewards_rejected)
-        kld = -torch.sum(1 + log_var - mean.pow(2) - log_var.exp(), dim=-1)
+        #kld = -torch.sum(1 + log_var - mean.pow(2) - log_var.exp(), dim=-1)
         accuracy = torch.mean((loss < np.log(2)).float())
         
         au = cls.compute_active_units(mean)
@@ -523,7 +523,7 @@ class VPLTrainer(Trainer):
         return {
             "loss": loss.mean().item(),
             "accuracy": accuracy.item(),
-            "kld": kld.mean().item(),
+            #"kld": kld.mean().item(),
             #"mean_embeddings_tsne": im1,
             "z_embeddings_tsne": im2,
             #"mean_embeddings_umap": im3,

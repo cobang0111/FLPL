@@ -145,7 +145,7 @@ class Decoder(nn.Module):
         γ = γ.unsqueeze(1).expand(-1, L, -1)            # [B, L, H]
         β = β.unsqueeze(1).expand(-1, L, -1)            # [B, L, H]
 
-        h = torch.relu(γ * h + β)                       # [B, L, H]
+        h = self.act(γ * h + β)                       # [B, L, H]
         out = self.out(h).squeeze(-1)                   # [B, L]
         return out
 
@@ -170,6 +170,7 @@ class IVPLModel(nn.Module):
         self.use_iaf = use_iaf
         if self.use_iaf:
              self.iaf_flows = nn.ModuleList()
+             self.iaf_arns = nn.ModuleList()
              for _ in range(num_iaf_flows):
                 arn = ConditionalAutoRegressiveNN(
                     input_dim=latent_dim, 
@@ -177,12 +178,16 @@ class IVPLModel(nn.Module):
                     context_dim=latent_dim
                 )
                 
+                for m in arn.modules():
+                    if isinstance(m, nn.Linear):
+                        nn.init.xavier_uniform_(m.weight)
+                        if m.bias is not None:
+                            nn.init.zeros_(m.bias)
+                
                 ### IAF
                 iaf = ConditionalAffineAutoregressive(arn)
-                for p in iaf.parameters(): 
-                    nn.init.zeros_(p)
-                
                 self.iaf_flows.append(iaf)
+                self.iaf_arns.append(arn)
 
         self.guiding = guiding
 
@@ -245,8 +250,8 @@ class IVPLModel(nn.Module):
         pair_embed = self.encode_pair(context_chosen, context_rejected)
         mean, log_var, x = self.encode_sequence(pair_embed, seq_start_end)
         
-        #mean = torch.clamp(mean, -1, 1)
-        #log_var = torch.clamp(log_var, -1, 1)
+        mean = torch.clamp(mean, -1, 1)
+        log_var = torch.clamp(log_var, -1, 1)
         
         if ground_truth_user_vector:
             z = torch.zeros_like(mean)
@@ -513,8 +518,6 @@ class IVPLTrainer(Trainer):
                 if model.guiding:
                     self.log(
                         {
-                            "mu_cos": mu_cos.mean().item(),
-                            "ell_cos": ell_cos.mean().item(),
                             "guide_loss": guide_loss.mean().item(),
                             "guide_ratio": guide_ratio.mean().item(),
                         }
@@ -571,7 +574,7 @@ class IVPLTrainer(Trainer):
         loss = cls.per_sample_loss(rewards_chosen, rewards_rejected)
         
         # MODIFY
-        kld = -torch.sum(1 + log_var - mean.pow(2) - log_var.exp(), dim=-1)
+        #kld = -torch.sum(1 + log_var - mean.pow(2) - log_var.exp(), dim=-1)
         au = cls.compute_active_units(mean)
         accuracy = torch.mean((loss < np.log(2)).float())
 
@@ -603,7 +606,7 @@ class IVPLTrainer(Trainer):
         return {
             "loss": loss.mean().item(),
             "accuracy": accuracy.item(),
-            "kld": kld.mean().item(),
+            #"kld": kld.mean().item(),
             #"mean_embeddings_tsne": im1,
             "z_embeddings_tsne": im2,
             #"mean_embeddings_umap": im3,
