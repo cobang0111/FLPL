@@ -638,7 +638,7 @@ class SPLTrainer(Trainer):
 
     @classmethod
     def compute_metrics(cls, eval_prediction: EvalPrediction):
-        rewards_chosen, rewards_rejected, mean, log_var, z, user_type = (
+        rewards_chosen, rewards_rejected, mean, last_mean, log_var, z, user_type = (
             eval_prediction.predictions
         )
         rewards_chosen = torch.from_numpy(rewards_chosen)
