@@ -16,8 +16,7 @@ from transformers import (
     TrainerCallback,
 )
 from transformers.utils import PaddingStrategy
-from .slpl_utils import SLPLTrainer, SLPLModel
-#from .slpl_enforce_utils import SLPLTrainer, SLPLModel
+from .spl_utils import SPLTrainer, SPLModel
 
 from .train_llm_preference_model import (
     get_step_decay_lr_lambda,
